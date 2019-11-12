@@ -1,16 +1,10 @@
 import glob
 import os
 import pandas as pd
-import argparse
-import numpy as np
 import cv2
-import time
 import sys
 sys.path.append(os.getcwd())
-
 from fire import Fire
-from tqdm import tqdm
-
 from siamfc import SiamFCTracker
 
 def main(video_dir, gpu_id,  model_path):

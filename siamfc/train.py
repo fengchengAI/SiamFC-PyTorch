@@ -1,29 +1,19 @@
 import torch
-import torch.nn.functional as F
-import torch.optim as optim
 import torchvision.transforms as transforms
-import torchvision
 import numpy as np
-import pandas as pd
 import os
-import cv2
 import pickle
 import lmdb
-
-from fire import Fire
 from torch.autograd import Variable
 from torch.optim.lr_scheduler import StepLR
 from torch.utils.data import DataLoader
-from glob import glob
 from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 from tensorboardX import SummaryWriter
-
 from .config import config
 from .alexnet import SiameseAlexNet
 from .dataset import ImagnetVIDDataset
-from .custom_transforms import Normalize, ToTensor, RandomStretch, \
-    RandomCrop, CenterCrop, RandomBlur, ColorAug
+from .custom_transforms import ToTensor, RandomStretch, RandomCrop, CenterCrop
 
 torch.manual_seed(1234)
 
@@ -48,6 +38,7 @@ def train(gpu_id, data_dir):
         RandomStretch(),
         RandomCrop((random_crop_size, random_crop_size),
                     config.max_translate),
+        #  RandomCrop会在center中心有一个摆动.
         ToTensor()
     ])
     valid_z_transforms = transforms.Compose([

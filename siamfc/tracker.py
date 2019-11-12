@@ -1,13 +1,8 @@
 import numpy as np
 import cv2
 import torch
-import torch.nn.functional as F
-import time
-import warnings
 import torchvision.transforms as transforms
-
 from torch.autograd import Variable
-
 from .alexnet import SiameseAlexNet
 from .config import config
 from .custom_transforms import ToTensor
@@ -30,6 +25,9 @@ class SiamFCTracker:
     def _cosine_window(self, size):
         """
             get the cosine window
+            生成一个size[0]*size[1]的一个类似于距离图,即最中间的最大,最边缘的最小,
+            np.sum(cos_window)是整个矩阵的和,
+            除以,会有权重的意思
         """
         cos_window = np.hanning(int(size[0]))[:, np.newaxis].dot(np.hanning(int(size[1]))[np.newaxis, :])
         cos_window = cos_window.astype(np.float32)
@@ -42,13 +40,14 @@ class SiamFCTracker:
             frame: an RGB image
             bbox: one-based bounding box [x, y, width, height]
         """
-        self.bbox = (bbox[0]-1, bbox[1]-1, bbox[0]-1+bbox[2], bbox[1]-1+bbox[3]) # zero based
-        self.pos = np.array([bbox[0]-1+(bbox[2]-1)/2, bbox[1]-1+(bbox[3]-1)/2])  # center x, center y, zero based
-        self.target_sz = np.array([bbox[2], bbox[3]])                            # width, height
+        self.target_sz = np.array([bbox[2], bbox[3]])
+        self.bbox = (bbox[0]-1, bbox[1]-1, bbox[0]-1+bbox[2], bbox[1]-1+bbox[3])  # ['xmin','ymin','xmax''ymax']
+
         # get exemplar img
         self.img_mean = tuple(map(int, frame.mean(axis=(0, 1))))
         exemplar_img, scale_z, s_z = get_exemplar_image(frame, self.bbox,
                 config.exemplar_size, config.context_amount, self.img_mean)
+        # s_z为模型大小
 
         # get exemplar feature
         exemplar_img = self.transforms(exemplar_img)[None,:,:,:]
@@ -56,19 +55,26 @@ class SiamFCTracker:
             exemplar_img_var = Variable(exemplar_img.cuda())
             self.model((exemplar_img_var, None))
 
-        self.penalty = np.ones((config.num_scale)) * config.scale_penalty
+        self.penalty = np.ones((config.num_scale)) * config.scale_penalty  # config.scale_penalty:0.9745   num_scale:3
         self.penalty[config.num_scale//2] = 1
 
         # create cosine window
-        self.interp_response_sz = config.response_up_stride * config.response_sz
+        self.interp_response_sz = config.response_up_stride * config.response_sz  # 16*17
         self.cosine_window = self._cosine_window((self.interp_response_sz, self.interp_response_sz))
 
         # create scalse
         self.scales = config.scale_step ** np.arange(np.ceil(config.num_scale/2)-config.num_scale,
                 np.floor(config.num_scale/2)+1)
+        '''
+        np.ceil向上取整         np.floor向下取整
+        scale_step = 1.0375    num_scale = 3 
+        self.scales = [-1,0,1]
+        '''
 
         # create s_x
         self.s_x = s_z + (config.instance_size-config.exemplar_size) / scale_z
+        # scale_z = config.exemplar_size/s_z
+        # self.s_x = config.instance_size/ scale_z
 
         # arbitrary scale saturation
         self.min_s_x = 0.2 * self.s_x
@@ -83,6 +89,7 @@ class SiamFCTracker:
             bbox: tuple of 1-based bounding box(xmin, ymin, xmax, ymax)
         """
         size_x_scales = self.s_x * self.scales
+        #  self.scales =  config.scale_step ^ [-1,0,1]
         pyramid = get_pyramid_instance_image(frame, self.pos, config.instance_size, size_x_scales, self.img_mean)
         instance_imgs = torch.cat([self.transforms(x)[None,:,:,:] for x in pyramid], dim=0)
         with torch.cuda.device(self.gpu_id):
@@ -93,7 +100,7 @@ class SiamFCTracker:
              for x in response_maps]
         # get max score
         max_score = np.array([x.max() for x in response_maps_up]) * self.penalty
-
+        # penalty=[0.9745,1,0.9745]
         # penalty scale change
         scale_idx = max_score.argmax()
         response_map = response_maps_up[scale_idx]

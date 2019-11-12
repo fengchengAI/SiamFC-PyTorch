@@ -1,12 +1,9 @@
-import torch
 import cv2
 import os
 import numpy as np
 import pickle
-import lmdb
 import hashlib
 from torch.utils.data.dataset import Dataset
-
 from .config import config
 
 class ImagnetVIDDataset(Dataset):

@@ -1,10 +1,8 @@
 import lmdb
 import cv2
-import numpy as np
-import os 
+import os
 import hashlib
 import functools
-
 from glob import glob
 from fire import Fire
 from tqdm import tqdm
