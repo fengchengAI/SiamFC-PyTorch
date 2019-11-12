@@ -11,6 +11,8 @@ def xyxy2cxcywh(bbox):
            (bbox[3]-bbox[1])
 
 def crop_and_pad(img, cx, cy, model_sz, original_sz, img_mean=None):
+    # ?? model_sz与original_sz是否相反
+    # 先填充再resize
     xmin = cx - original_sz // 2
     xmax = cx + original_sz // 2
     ymin = cy - original_sz // 2
@@ -42,10 +44,11 @@ def crop_and_pad(img, cx, cy, model_sz, original_sz, img_mean=None):
     return im_patch
 
 def get_exemplar_image(img, bbox, size_z, context_amount, img_mean=None):
+    # size_z:127    context_amount:0.5    bbox:['xmin','ymin','xmax''ymax']
     cx, cy, w, h = xyxy2cxcywh(bbox)
     wc_z = w + context_amount * (w+h)
     hc_z = h + context_amount * (w+h)
-    s_z = np.sqrt(wc_z * hc_z)
+    s_z = np.sqrt(wc_z * hc_z)  # 模型大小
     scale_z = size_z / s_z
     exemplar_img = crop_and_pad(img, cx, cy, size_z, s_z, img_mean)
     return exemplar_img, scale_z, s_z

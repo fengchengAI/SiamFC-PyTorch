@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 
 class RandomStretch(object):
-    def __init__(self, max_stretch=0.05):
+    def  __init__(self, max_stretch=0.05):
         """Random resize image according to the stretch
         Args:
             max_stretch(float): 0 to 1 value   
@@ -16,6 +16,10 @@ class RandomStretch(object):
             sample(numpy array): 3 or 1 dim image
         """
         scale_h = 1.0 + np.random.uniform(-self.max_stretch, self.max_stretch)
+        '''
+        np.random.uniform(min,max,size)
+        在[min,max)中随机取数 
+        '''
         scale_w = 1.0 + np.random.uniform(-self.max_stretch, self.max_stretch)
         h, w = sample.shape[:2]
         shape = (int(h * scale_h), int(w * scale_w))
@@ -69,8 +73,8 @@ class RandomCrop(object):
             size (tuple): desired size
             max_translate: max translate of random shift
         """
-        self.size = size
-        self.max_translate = max_translate
+        self.size = size  # config.instance_size - 2 * config.total_stride:255-2*8
+        self.max_translate = max_translate  # 3
 
     def __call__(self, sample):
         """
