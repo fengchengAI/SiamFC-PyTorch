@@ -3,6 +3,9 @@ import numpy as np
 import cv2
 
 class RandomStretch(object):
+    '''
+    将训练的样本进行随机压缩或扩展
+    '''
     def  __init__(self, max_stretch=0.05):
         """Random resize image according to the stretch
         Args:
@@ -29,8 +32,9 @@ class CenterCrop(object):
     def __init__(self, size):
         """Crop the image in the center according the given size 
             if size greater than image size, zero padding will adpot
+            在训练阶段将参考图片进行中心裁剪
         Args:
-            size (tuple): desired size
+            size (tuple): desired size :127
         """
         self.size = size
 
@@ -40,7 +44,7 @@ class CenterCrop(object):
             sample(numpy array): 3 or 1 dim image
         """
         shape = sample.shape[:2]
-        cy, cx = (shape[0]-1) // 2, (shape[1]-1) // 2
+        cy, cx = (shape[0]-1) // 2, (shape[1]-1) // 2  # 图片的中心
         ymin, xmin = cy - self.size[0]//2, cx - self.size[1] // 2
         ymax, xmax = cy + self.size[0]//2 + self.size[0] % 2,\
                      cx + self.size[1]//2 + self.size[1] % 2
@@ -69,9 +73,10 @@ class RandomCrop(object):
     def __init__(self, size, max_translate):
         """Crop the image in the center according the given size 
             if size greater than image size, zero padding will adpot
+            在训练阶段将搜索图片进行中心裁剪
         Args:
-            size (tuple): desired size
-            max_translate: max translate of random shift
+            size (tuple): desired size :255-16
+            max_translate: max translate of random 最大中心偏移
         """
         self.size = size  # config.instance_size - 2 * config.total_stride:255-2*8
         self.max_translate = max_translate  # 3
@@ -79,7 +84,7 @@ class RandomCrop(object):
     def __call__(self, sample):
         """
         Args:
-            sample(numpy array): 3 or 1 dim image
+            sample(numpy array): 3 or 1 dim 通道的图像
         """
         shape = sample.shape[:2]
         cy_o = (shape[0] - 1) // 2

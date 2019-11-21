@@ -1,6 +1,8 @@
 import numpy as np
 import time
-from siamfc import SiamFCTracker, config
+from siamfc.config import config
+from siamfc.tracker import SiamFCTracker
+
 import cv2
 import glob
 import os

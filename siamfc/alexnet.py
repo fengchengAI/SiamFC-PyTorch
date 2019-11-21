@@ -3,7 +3,7 @@ import numpy as np
 import torch.nn.functional as F
 from torch import nn
 
-from .config import config
+from siamfc.config import config
 
 class SiameseAlexNet(nn.Module):
     def __init__(self, gpu_id, train=True):
@@ -28,6 +28,11 @@ class SiameseAlexNet(nn.Module):
         self.corr_bias = nn.Parameter(torch.zeros(1))
         if train:
             gt, weight = self._create_gt_mask((config.train_response_sz, config.train_response_sz))
+            '''
+            config.train_response_sz = 15
+            虽然训练的时候instance被缩放到239，但是网络最后映射关系的输出还是１５
+            _create_gt_mask返回一个gt中间为１，周围为０，且带有权重的weight
+            '''
             with torch.cuda.device(gpu_id):
                 self.train_gt = torch.from_numpy(gt).cuda()
                 self.train_weight = torch.from_numpy(weight).cuda()
@@ -48,7 +53,7 @@ class SiameseAlexNet(nn.Module):
 
     def forward(self, x):
         exemplar, instance = x
-        if exemplar is not None and instance is not None:
+        if exemplar is not None and instance is not None:  # 训练的时候，两个都不为空
             batch_size = exemplar.shape[0]
             exemplar = self.features(exemplar)
             instance = self.features(instance)
@@ -59,11 +64,13 @@ class SiameseAlexNet(nn.Module):
                     + self.corr_bias
             return score.transpose(0, 1)
         elif exemplar is not None and instance is None:
-            # inference used
+            # inference used 推理的初始化，即第一帧，只提取了特征，在下一帧，用于instance的卷积操作
             self.exemplar = self.features(exemplar)
             self.exemplar = torch.cat([self.exemplar for _ in range(3)], dim=0)
         else:
             # inference used we don't need to scale the reponse or add bias
+            # 有instance无exemplar
+            # 推理的后续，即第n+1帧
             instance = self.features(instance)
             N, _, H, W = instance.shape
             instance = instance.view(1, -1, H, W)
@@ -83,11 +90,12 @@ class SiameseAlexNet(nn.Module):
 
     def _create_gt_mask(self, shape):
         # same for all pairs
-        h, w = shape
+        # _create_gt_mask返回一个gt中间为１，周围为０，且带有权重的weight
+        h, w = shape  # 15,15
         y = np.arange(h, dtype=np.float32) - (h-1) / 2.
         x = np.arange(w, dtype=np.float32) - (w-1) / 2.
         y, x = np.meshgrid(y, x)
-        dist = np.sqrt(x**2 + y**2)
+        dist = np.sqrt(x**2 + y**2)  # 半径
         mask = np.zeros((h, w))
         mask[dist <= config.radius / config.total_stride] = 1
         mask = mask[np.newaxis, :, :]

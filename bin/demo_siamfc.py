@@ -5,7 +5,7 @@ import cv2
 import sys
 sys.path.append(os.getcwd())
 from fire import Fire
-from siamfc import SiamFCTracker
+from siamfc.tracker import SiamFCTracker
 
 def main(video_dir, gpu_id,  model_path):
     # load videos
@@ -27,7 +27,7 @@ def main(video_dir, gpu_id,  model_path):
                     bbox[0]+bbox[2]-1, bbox[1]+bbox[3]-1)
         else: 
             bbox = tracker.update(frame)
-        # bbox xmin ymin xmax ymax
+        # bbox  x['xmin','ymin','xmax','ymax']
         frame = cv2.rectangle(frame,
                               (int(bbox[0]), int(bbox[1])),
                               (int(bbox[2]), int(bbox[3])),
