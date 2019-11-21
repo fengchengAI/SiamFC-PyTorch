@@ -47,12 +47,12 @@
 在本项目中，为了简单，并没有对w,h填充相同的大小，而是根据![](http://latex.codecogs.com/gif.latex?\sqrt{(w+2p)\times(h+2p)})作为边长得到一会正方形的包含填充的框（橙色），再resiz
 
 #### 训练
-
+<font size=10>
  &emsp; &emsp;训练所用到数据全部进行了基于gt_bound中心的裁剪，即如果存在一个img,及其对应box，
 ![](http://latex.codecogs.com/gif.latex?s\_z=\sqrt{(w+2p)\times(h+2p)}),  ![](http://latex.codecogs.com/gif.latex?scale\_z=\frac{127}{s\_z}),
 ![](http://latex.codecogs.com/gif.latex?scale\_x=scale\_z),  ![](http://latex.codecogs.com/gif.latex?s\_x=\frac{255}{s\_x})
  &emsp;&emsp;s为图中所示的橙色框，scale为缩放比，z表示example，x表示instance（上面的标识为代码中的标识）. 如果该图片作为example，则计算$s\_z$将图像裁剪至以box的center_x，和center_y为中心，边长为![](http://latex.codecogs.com/gif.latex?s\_z)的矩形，然后resize到127，对于instance图像也是一样的
-
+</font>
 <u>上面对于训练阶段对图像的裁剪处理，作者在线下进行完成，并将图片打包为`tqdm`以方便高速读取.</u>
 </br>
 
