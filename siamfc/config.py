@@ -9,6 +9,8 @@ class Config:
     num_per_epoch = 53200                  # num of samples per epoch
     train_ratio = 0.9                      # training ratio of VID dataset
     frame_range = 100                      # frame range of choosing the instance
+    # 先随机选择example然后根据frame_range在离example一定范围内选择instance
+
     train_batch_size = 8                   # training batch size
     valid_batch_size = 8                   # validation batch size
     train_num_workers = 8                  # number of workers of train dataloader
@@ -31,7 +33,7 @@ class Config:
     scale_lr = 0.59                        # scale learning rate
     response_up_stride = 16                # response upsample stride
     response_sz = 17                       # response size
-    train_response_sz = 15                 # train response size
+    train_response_sz = 15                 # train response size因为训练的时候在RandomCrop操作时将instance的size变成239了
     window_influence = 0.176               # window influence
     scale_penalty = 0.9745                 # scale penalty
     total_stride = 8                       # total stride of backbone
