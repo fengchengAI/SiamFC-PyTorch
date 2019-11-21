@@ -22,7 +22,7 @@
 
 在论文中有2.4节的公式7中有如下公式;  
 
-![](http://latex.codecogs.com/gif.latex?\\s(w+2p)\times s(h+2p) = A  \tag{7})
+![](http://latex.codecogs.com/gif.latex?\s(w+2p)\times s(h+2p)=A)
 
 可以近似看成是一个卷积核为１，填充为p，步长为ｓ的卷积操作，然后得到feature_map为Ａ
 
