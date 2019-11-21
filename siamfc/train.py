@@ -10,34 +10,43 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 from tensorboardX import SummaryWriter
-from .config import config
-from .alexnet import SiameseAlexNet
-from .dataset import ImagnetVIDDataset
-from .custom_transforms import ToTensor, RandomStretch, RandomCrop, CenterCrop
+from siamfc.config import config
+from siamfc.alexnet import SiameseAlexNet
+from siamfc.dataset import ImagnetVIDDataset
+from siamfc.custom_transforms import ToTensor, RandomStretch, RandomCrop, CenterCrop
+
 
 torch.manual_seed(1234)
 
 def train(gpu_id, data_dir):
     # loading meta data
-    meta_data_path = os.path.join(data_dir, "meta_data.pkl")
+    meta_data_path = os.path.join(data_dir, "meta_data.pkl")  # 仅仅保存图片名字
     meta_data = pickle.load(open(meta_data_path,'rb'))
     all_videos = [x[0] for x in meta_data]
+    '''
+    x[0]= video_name是图片的上级文件夹名, 
+    x[1] = trajs是一个字典，每个健所对应的值是该跟踪id的帧图片
+    '''
 
     # split train/valid dataset
     train_videos, valid_videos = train_test_split(all_videos, 
             test_size=1-config.train_ratio, random_state=config.seed)
 
     # define transforms
-    random_crop_size = config.instance_size - 2 * config.total_stride
+    random_crop_size = config.instance_size - 2 * config.total_stride  # 255-16=239
     train_z_transforms = transforms.Compose([
-        RandomStretch(),
-        CenterCrop((config.exemplar_size, config.exemplar_size)),
+        RandomStretch(),  # 随机压缩或者扩展，此时shape已经发生改变
+        CenterCrop((config.exemplar_size, config.exemplar_size)), #
+        # 将图片进行中心化，并裁剪到config.exemplar_size×config.exemplar_size
+        # 如果裁剪不够则补零或者均值
         ToTensor()
     ])
     train_x_transforms = transforms.Compose([
         RandomStretch(),
         RandomCrop((random_crop_size, random_crop_size),
                     config.max_translate),
+        # RandomCrop会在center中心有一个摆动.
+        # 在训练阶段RandomCrop操作会将原始图片裁剪到random_crop_siz即239，
         #  RandomCrop会在center中心有一个摆动.
         ToTensor()
     ])
@@ -99,7 +108,7 @@ def train(gpu_id, data_dir):
             valid_loss = []
             model.eval()
             for i, data in enumerate(tqdm(validloader)):
-                exemplar_imgs, instance_imgs = data
+                exemplar_imgs, instance_imgs = data  #
                 exemplar_var, instance_var = Variable(exemplar_imgs.cuda()),\
                                              Variable(instance_imgs.cuda())
                 outputs = model((exemplar_var, instance_var))

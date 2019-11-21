@@ -9,12 +9,17 @@ from .config import config
 class ImagnetVIDDataset(Dataset):
     def __init__(self, db, video_names, data_dir, z_transforms, x_transforms, training=True):
         self.video_names = video_names
+        # video_names 为要训练的或者测试的视频名称，视频名称即图片的上一级文件夹名称
         self.data_dir = data_dir
         self.z_transforms = z_transforms
         self.x_transforms = x_transforms
         meta_data_path = os.path.join(data_dir, 'meta_data.pkl')
         self.meta_data = pickle.load(open(meta_data_path, 'rb'))
         self.meta_data = {x[0]:x[1] for x in self.meta_data}
+        '''
+        x[0]= video_name是图片的上级文件夹名, 
+        x[1] = trajs是一个字典，每个健所对应的值是该跟踪id的帧图片
+        '''
         # filter traj len less than 2
         for key in self.meta_data.keys():
             trajs = self.meta_data[key]
@@ -66,6 +71,7 @@ class ImagnetVIDDataset(Dataset):
         # the probability being choosen are high
         weights = self._sample_weights(exemplar_idx, low_idx, up_idx, config.sample_type)
         instance = np.random.choice(traj[low_idx:exemplar_idx] + traj[exemplar_idx+1:up_idx], p=weights)
+        # 当sample_type＝'uniform'时，随机选择的权重weights对np.random.choice没影响
         instance_name = os.path.join(self.data_dir, video, instance+".{:02d}.x.jpg".format(trkid))
         instance_img = self.imread(instance_name)
         instance_img = cv2.cvtColor(instance_img, cv2.COLOR_BGR2RGB)
