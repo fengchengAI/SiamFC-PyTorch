@@ -2,7 +2,7 @@
 
 ####  此项目主要是针对作者对SiamFC的Pytorch实现做了更多的中文注释
 
-原始readme.txt修改为readme１.txt，建议在看代码前看此readme，在测试程序时看readme１.txt
+原始[readme.txt](https://github.com/fengchengAI/SiamFC-PyTorch/blob/master/README1.md)修改为readme１.txt，建议在看代码前看此readme，在测试程序时看readme１.txt
 
 [SiamFC: Fully-Convolutional Siamese Networksfor Object Tracking](https://arxiv.org/pdf/1606.09549.pdf)
 
